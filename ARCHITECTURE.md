@@ -6,9 +6,10 @@ The browser owns all calculator state. Hosting serves static HTML, CSS, JavaScri
 | --- | --- |
 | `dist/index.html` | Accessible display, editable expression, and 21-key keypad |
 | `dist/styles.css` | Dark surfaces, tall display, responsive keypad, and focus states |
-| `dist/calculator.js` | Arithmetic parser, state model, formatting, and DOM wiring |
+| `dist/calculator.js` | Arithmetic parser, state model, history storage adapter, formatting, and DOM wiring |
 | `dist/icons/` | Shared C artwork as SVG favicon and opaque 180 × 180 PNG for iPhone home-screen shortcuts |
 | `tests/calculator.test.js` | Precedence, shorthand multiplication, errors, and input transitions |
+| `tests/history.test.js` | Restore/save behavior, input isolation, storage limits, malformed data, and failure recovery |
 | `.openai/hosting.json` | Earlier private Sites identity; independent of current GitHub Pages hosting |
 
 ## Arithmetic flow
@@ -19,9 +20,19 @@ The tokenizer accepts decimal/scientific numbers and arithmetic symbols. A recur
 
 Continuation shows the same 12-significant-digit answer the user saw. `carriedNumber` binds its numeric token (start, length, raw value) to the original precision. The parser substitutes that raw value only for the untouched token. Edits within the number invalidate the binding; edits before it move the binding. This prevents ugly floating-point digits from entering the visible expression without introducing cumulative rounding. Native replacement of the input clears the binding.
 
-The DOM adapter preserves text selection for keypad editing. Physical arithmetic keys and keypad taps use the same actions even when the input has focus. Native replacement input has an already-empty value after Enter, so it cannot append to the preceding calculation. History uses `textContent`, not HTML interpolation. Limits: 500 input characters and 100 session entries.
+The DOM adapter preserves text selection for keypad editing. Physical arithmetic keys and keypad taps use the same actions even when the input has focus. Native replacement input has an already-empty value after Enter, so it cannot append to the preceding calculation. History uses `textContent`, not HTML interpolation. Limits: 500 input characters and 100 completed entries.
 
-When a browser offers `document.modelContext`, the optional `calculate_expression` tool validates input before using the same visible Enter flow. Unsupported browsers keep the normal interface. This tool has no network or storage access.
+When a browser offers `document.modelContext`, the optional `calculate_expression` tool validates input before using the same visible Enter flow, including saving history locally. Unsupported browsers keep the normal interface. This tool has no network access.
+
+## History persistence
+
+`HistoryStorage` receives a getter for the browser's localStorage. Both the getter and its read/write calls can throw; all are caught inside the adapter so failures cannot become arithmetic errors. `Calculator` accepts this optional adapter and loads history once in its constructor. Its default remains an in-memory model for arithmetic tests.
+
+Successful Enter updates history, clears active input, and then saves `{ version: 1, entries: [{ expression, answer }] }` under `top-view-calculator.history.v1`. Empty/repeated Enter, typing, arithmetic errors, and `C` do not write. Restoring does not set `expression`, `answer`, `completed`, or `carriedNumber`; the next calculation starts fresh. Stored raw answers are not recomputed from rounded continuation text.
+
+Loading rejects data over 400,000 characters (enough for 100 maximum-length expressions even with JSON escaping) and unsupported structures/versions. It skips entries with invalid expression types, lengths, or characters and non-finite numeric answers, strips unknown fields, and retains the latest 100 valid rows. It does not evaluate stored expression text. Existing data is not rewritten on startup. Load/save issues appear in the existing feedback area; arithmetic errors take priority, and only arithmetic errors mark the input invalid. A successful save clears the storage notice.
+
+Only this app's key is written. History is local to a browser storage context and origin, not encrypted, uploaded, or shared through an account. GitHub Pages projects on the same host share an origin; the app-specific key avoids accidental key collisions, not same-origin access. Clearing site data or ending a private session can remove history. Simultaneous instances use the most recent successful save; there is no cross-tab merge. See [ADR 002](docs/decisions/002-local-history.md).
 
 ## Hosting and checks
 
