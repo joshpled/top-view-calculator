@@ -14,6 +14,20 @@ npm run check
 
 The authored site lives in `dist/`; no build is required. Serve that folder through any static HTTP host. The JavaScript module needs HTTP rather than opening the HTML as a local file.
 
+## Hosting and iPhone home screen
+
+The public app is hosted on [GitHub Pages](https://joshpled.github.io/top-view-calculator/dist/). Pages publishes the repository root from `main`, so the calculator URL includes `/dist/`. Merging to `main` triggers Pages publication; wait for its deployment to finish before checking changes.
+
+In Safari on iPhone, open the calculator link, use Share → Add to Home Screen, then Add. The shortcut uses a cyan **C** on charcoal. If an existing shortcut keeps the old icon, remove that shortcut and add it again after the deployment finishes.
+
+`dist/icons/calculator.svg` is the artwork source and browser favicon. `dist/icons/apple-touch-icon.png` is its opaque 180 × 180 export for iPhone, linked explicitly from the HTML using Apple's [web clip icon guidance](https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/ConfiguringWebApplications/ConfiguringWebApplications.html). To change the artwork, edit the SVG and regenerate the PNG. With librsvg's `rsvg-convert` available, run:
+
+```sh
+rsvg-convert --width 180 --height 180 --output dist/icons/apple-touch-icon.png dist/icons/calculator.svg
+```
+
+`rsvg-convert` is only an optional artwork export tool; running the app and its checks requires no new dependency. This adds a shortcut icon, not offline support. Physical iPhone installation still needs a device check.
+
 ## Use
 
 - Enter numbers, decimals, `+`, `−`, `×`, `÷`, and nested parentheses. Answers appear only after Enter / `=`. Enter saves the calculation once in history and immediately clears the input for the next calculation.

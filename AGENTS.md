@@ -10,13 +10,15 @@ Plain HTML/CSS/JavaScript. Preserve the dark display and compact arithmetic keyp
 
 ## Structure and conventions
 
-Three authored site files live in `dist/` and are tracked. Pure parser/state exports share `dist/calculator.js` with DOM wiring guarded for Node. Docs: README.md, ARCHITECTURE.md, docs/decisions/. No dependencies, secrets, environment variables, or persistent user data.
+Authored site files and icons live in `dist/` and are tracked. Pure parser/state exports share `dist/calculator.js` with DOM wiring guarded for Node. Docs: README.md, ARCHITECTURE.md, docs/decisions/. No dependencies, secrets, environment variables, or persistent user data. `dist/icons/calculator.svg` is the icon source; re-export its opaque 180 × 180 PNG after artwork changes (command in README).
 
-Follow the feature branch/PR workflow. Do not merge without explicit user approval. Private Sites publication and GitHub main are separate states.
+Follow the feature branch/PR workflow. Do not merge without explicit user approval. Public GitHub Pages publishes the root of `main`; the app URL is https://joshpled.github.io/top-view-calculator/dist/. The earlier private Sites preview remains separate.
 
-GitHub cannot enforce branch protection for this private repository on the current account plan. Keep using PRs and passing checks; automatic remote branch deletion is enabled.
+The repository is now public. `main` had no branch protection configured when checked on 2026-09-17. Keep using PRs and passing checks; automatic remote branch deletion is enabled.
 
 ## Decisions log
+
+- 2026-09-17 — Use one cyan C artwork for the SVG favicon and opaque Apple touch PNG — matches the calculator and provides an iPhone shortcut identity — relative links support the Pages `/dist/` path; existing shortcuts may need re-adding, and this does not enable offline operation.
 
 - 2026-09-17 — Calculator merged to GitHub main through PR #1 (squash f7a20a8) — approved implementation and 42 passing tests — Sites deployment remains independent; source merge does not republish the app.
 - 2026-09-17 — Show answers only after Enter/equals — requested explicit calculation behavior — typing renders only the expression; completed answers remain in the scrollable history.
