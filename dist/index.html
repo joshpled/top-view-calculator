@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#232323">
+  <meta name="description" content="A simple calculator with a spacious display, parentheses, and everyday arithmetic.">
+  <title>Calculator</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23232323'/%3E%3Cpath d='M8 11h16M8 21h16' stroke='%238fd3db' stroke-width='4'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./styles.css?v=3">
+  <script type="module" src="./calculator.js?v=3"></script>
+</head>
+<body>
+  <main class="calculator" aria-label="Calculator">
+    <header class="topbar"><h1>Calculator</h1><span aria-hidden="true">( + − × ÷ )</span></header>
+    <section id="display" class="display" aria-label="Calculation display" tabindex="0">
+      <div id="history" class="history" role="log" aria-label="Previous calculations" aria-live="off"></div>
+      <div class="current">
+        <label class="sr-only" for="expression">Expression</label>
+        <input id="expression" class="expression" type="text" inputmode="none" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="0" maxlength="500" aria-describedby="feedback">
+        <p id="feedback" class="feedback" aria-live="polite"></p>
+        <p id="announcement" class="sr-only" aria-live="polite"></p>
+      </div>
+    </section>
+    <div class="keypad" aria-label="Calculator keypad">
+      <button class="key utility clear" data-action="clear" aria-label="Clear current expression">C</button>
+      <button class="key utility" data-value="(" aria-label="Open parenthesis">(</button>
+      <button class="key utility" data-value=")" aria-label="Close parenthesis">)</button>
+      <button class="key utility backspace" data-action="backspace" aria-label="Backspace"><svg viewBox="0 0 28 24" fill="none" aria-hidden="true"><path d="M10 4h13a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H10L2 12l8-8Z"/><path d="m13 9 6 6m0-6-6 6"/></svg></button>
+      <button class="key number" data-value="7">7</button><button class="key number" data-value="8">8</button><button class="key number" data-value="9">9</button><button class="key operator" data-value="÷" aria-label="Divide">÷</button>
+      <button class="key number" data-value="4">4</button><button class="key number" data-value="5">5</button><button class="key number" data-value="6">6</button><button class="key operator" data-value="×" aria-label="Multiply">×</button>
+      <button class="key number" data-value="1">1</button><button class="key number" data-value="2">2</button><button class="key number" data-value="3">3</button><button class="key operator" data-value="−" aria-label="Subtract">−</button>
+      <button class="key utility" data-action="sign" aria-label="Toggle sign of the whole expression">±</button><button class="key number" data-value="0">0</button><button class="key number" data-value="." aria-label="Decimal point">.</button><button class="key operator" data-value="+" aria-label="Add">+</button>
+      <button class="key enter" data-action="equals"><span>Enter</span><span class="equals-mark" aria-hidden="true">=</span></button>
+    </div>
+  </main>
+</body>
+</html>
