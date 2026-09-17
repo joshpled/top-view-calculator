@@ -26,4 +26,4 @@ When a browser offers `document.modelContext`, the optional `calculate_expressio
 
 `dist/` is tracked source, not generated output. `npm run check` validates JavaScript syntax and runs Node's built-in tests. There is no TypeScript compiler or lint dependency. Local and hosted versions use the same relative asset paths.
 
-The GitHub implementation stays on `feature/calculator` for review. Sites receives the exact committed static source for the approved private preview; publication does not merge the GitHub PR.
+GitHub `main` contains the reviewed calculator implementation merged through PR #1. Subsequent changes use a feature or fix branch and a PR. Sites receives the exact committed static source for the approved private preview; merging GitHub source does not automatically republish the Site. The merged application files match the deployed version.

@@ -14,7 +14,11 @@ Three authored site files live in `dist/` and are tracked. Pure parser/state exp
 
 Follow the feature branch/PR workflow. Do not merge without explicit user approval. Private Sites publication and GitHub main are separate states.
 
+GitHub cannot enforce branch protection for this private repository on the current account plan. Keep using PRs and passing checks; automatic remote branch deletion is enabled.
+
 ## Decisions log
 
+- 2026-09-17 — Calculator merged to GitHub main through PR #1 (squash f7a20a8) — approved implementation and 42 passing tests — Sites deployment remains independent; source merge does not republish the app.
+- 2026-09-17 — Show answers only after Enter/equals — requested explicit calculation behavior — typing renders only the expression; completed answers remain in the scrollable history.
 - 2026-09-17 — Enter immediately archives and clears input; the whole display scrolls — prevents old digits returning in a second entry — carried-number bindings keep display rounding separate from numeric precision and are invalidated when edited.
 - 2026-09-17 — Static files, arithmetic parser, page-memory history, display-only rounding — fits the lightweight approved scope — floating-point limitations and implicit multiplication precedence are documented; see docs/decisions/001-static-calculator.md.
