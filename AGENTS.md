@@ -18,6 +18,8 @@ The repository is now public. `main` had no branch protection configured when ch
 
 ## Decisions log
 
+- 2026-09-17 — Saved-history PR #4 squash-merged as aebb67b after 58 tests and browser checks passed — approved persistence of completed calculations only — GitHub Pages v4 verified with reload/reopen checks and matching JavaScript; feature branch deleted locally and remotely; active input stays empty, and existing lost sessions cannot be recovered. Physical iPhone persistence remains device-unverified.
+
 - 2026-09-17 — Persist the latest 100 completed calculations in localStorage — requested history across reloads — restore history only, keep input empty, catch storage failures, and preserve raw answers; see docs/decisions/002-local-history.md. Concurrent instances use the latest successful save.
 - 2026-09-17 — Icon PR #3 squash-merged as 6995f23 and verified on GitHub Pages — approved iPhone C icon — feature branch deleted locally and remotely; existing home-screen shortcuts may need re-adding.
 
