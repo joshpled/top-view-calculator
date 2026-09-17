@@ -1,14 +1,15 @@
 # Architecture
 
-The browser owns all calculator state. Hosting serves three static files; there is no backend, database, account system, or dependency bundle.
+The browser owns all calculator state. Hosting serves static HTML, CSS, JavaScript, and icon assets; there is no backend, database, account system, or dependency bundle.
 
 | File | Responsibility |
 | --- | --- |
 | `dist/index.html` | Accessible display, editable expression, and 21-key keypad |
 | `dist/styles.css` | Dark surfaces, tall display, responsive keypad, and focus states |
 | `dist/calculator.js` | Arithmetic parser, state model, formatting, and DOM wiring |
+| `dist/icons/` | Shared C artwork as SVG favicon and opaque 180 × 180 PNG for iPhone home-screen shortcuts |
 | `tests/calculator.test.js` | Precedence, shorthand multiplication, errors, and input transitions |
-| `.openai/hosting.json` | Private Sites identity and static output folder |
+| `.openai/hosting.json` | Earlier private Sites identity; independent of current GitHub Pages hosting |
 
 ## Arithmetic flow
 
@@ -26,4 +27,6 @@ When a browser offers `document.modelContext`, the optional `calculate_expressio
 
 `dist/` is tracked source, not generated output. `npm run check` validates JavaScript syntax and runs Node's built-in tests. There is no TypeScript compiler or lint dependency. Local and hosted versions use the same relative asset paths.
 
-GitHub `main` contains the reviewed calculator implementation merged through PR #1. Subsequent changes use a feature or fix branch and a PR. Sites receives the exact committed static source for the approved private preview; merging GitHub source does not automatically republish the Site. The merged application files match the deployed version.
+GitHub Pages publishes the root of public `main`; the calculator is at `/top-view-calculator/dist/`. Relative asset links resolve beside its HTML, including the explicitly linked Apple touch icon. The PNG stays opaque and square so iOS can apply its own home-screen mask. Its matching SVG supplies the browser favicon and editable source. These assets do not add a service worker or offline caching.
+
+Changes use a feature or fix branch and a PR. Merging to `main` triggers GitHub Pages publication. The earlier private Sites preview is separate and does not update through this workflow.
