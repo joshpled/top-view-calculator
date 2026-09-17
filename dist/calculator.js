@@ -177,7 +177,6 @@ export class Calculator {
 if (typeof document !== 'undefined') {
   const calculator = new Calculator();
   const input = document.querySelector('#expression');
-  const result = document.querySelector('#result');
   const feedback = document.querySelector('#feedback');
   const announcement = document.querySelector('#announcement');
   const history = document.querySelector('#history');
@@ -189,12 +188,7 @@ if (typeof document !== 'undefined') {
     if (cursor !== undefined) input.setSelectionRange(cursor, cursor);
     feedback.textContent = calculator.error;
     input.setAttribute('aria-invalid', String(Boolean(calculator.error)));
-    let value = null;
-    if (calculator.expression.trim()) {
-      try { value = calculator.currentValue(); } catch { /* In-progress input is quiet until Enter. */ }
-    }
-    result.textContent = value === null ? (calculator.expression ? '—' : '') : formatResult(value);
-    result.classList.add('is-preview');
+    // Answers are added to history only by Enter/equals, never while editing.
     const rows = calculator.history;
     const signature = JSON.stringify(rows);
     if (signature !== historySignature) {

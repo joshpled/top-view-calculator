@@ -16,7 +16,7 @@ The authored site lives in `dist/`; no build is required. Serve that folder thro
 
 ## Use
 
-- Enter numbers, decimals, `+`, `−`, `×`, `÷`, and nested parentheses. A live answer appears whenever the expression is complete. Enter saves it once in history and immediately clears the input for the next calculation.
+- Enter numbers, decimals, `+`, `−`, `×`, `÷`, and nested parentheses. Answers appear only after Enter / `=`. Enter saves the calculation once in history and immediately clears the input for the next calculation.
 - Scroll or swipe anywhere in the upper display to review earlier calculations. The keypad stays in place. New input returns the display to the current calculation.
 - `2(3+4)`, `(2+3)(4+5)`, and `(2+3)4` imply multiplication. Multiplication, division, and implied multiplication run left to right: `6÷2(1+2)` is `9`. Write `6÷(2(1+2))` when the whole product belongs in the denominator.
 - After Enter, a number or opening parenthesis starts fresh; an operator continues from the answer. Repeated Enter does nothing.
