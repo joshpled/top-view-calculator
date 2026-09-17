@@ -1,4 +1,44 @@
 const MAX_LENGTH = 500;
+const MAX_HISTORY = 100;
+export const HISTORY_KEY = 'top-view-calculator.history.v1';
+
+/** Storage failures must never prevent arithmetic or erase the current session. */
+export class HistoryStorage {
+  error = '';
+
+  // A getter keeps even access to window.localStorage inside the error boundary.
+  constructor(getStorage) { this.getStorage = getStorage; }
+
+  load() {
+    try {
+      const raw = this.getStorage().getItem(HISTORY_KEY);
+      if (raw === null) { this.error = ''; return []; }
+      // Allow even 100 maximum-length expressions with six-character JSON escapes.
+      if (raw.length > 400000) throw new Error('Oversized history');
+      const data = JSON.parse(raw);
+      if (data?.version !== 1 || !Array.isArray(data.entries)) throw new Error('Invalid history');
+      const valid = data.entries.filter(entry => entry &&
+        typeof entry.expression === 'string' && entry.expression.trim().length > 0 &&
+        entry.expression.length <= MAX_LENGTH && /^[0-9eE.+−×÷*/()\s-]+$/.test(entry.expression) &&
+        Number.isFinite(entry.answer));
+      this.error = valid.length === data.entries.length ? '' : 'Some saved calculations could not be restored.';
+      // Restore text and the original answer, not a re-evaluation of rounded continuation text.
+      return valid.slice(-MAX_HISTORY).map(({ expression, answer }) => ({ expression, answer }));
+    } catch {
+      this.error = 'Saved history could not be loaded. You can still calculate.';
+      return [];
+    }
+  }
+
+  save(history) {
+    try {
+      this.getStorage().setItem(HISTORY_KEY, JSON.stringify({ version: 1, entries: history.slice(-MAX_HISTORY) }));
+      this.error = '';
+    } catch {
+      this.error = 'History could not be saved. New calculations stay only until you close or reload.';
+    }
+  }
+}
 
 /** Recursive descent keeps arithmetic separate from JavaScript execution. */
 export function evaluateExpression(source, carriedNumber = null) {
@@ -84,6 +124,11 @@ export class Calculator {
   history = [];
   carriedNumber = null;
 
+  constructor(historyStorage = null) {
+    this.historyStorage = historyStorage;
+    this.history = historyStorage?.load() ?? [];
+  }
+
   edit(value) {
     this.expression = value.slice(0, MAX_LENGTH);
     this.completed = false;
@@ -167,15 +212,17 @@ export class Calculator {
       this.completed = true;
       this.error = '';
       this.history.push({ expression: this.expression, answer: this.answer });
-      if (this.history.length > 100) this.history.shift();
+      if (this.history.length > MAX_HISTORY) this.history.shift();
       this.expression = '';
       this.carriedNumber = null;
-    } catch (error) { this.error = error.message; }
+    } catch (error) { this.error = error.message; return; }
+    this.historyStorage?.save(this.history);
   }
 }
 
 if (typeof document !== 'undefined') {
-  const calculator = new Calculator();
+  const historyStorage = new HistoryStorage(() => window.localStorage);
+  const calculator = new Calculator(historyStorage);
   const input = document.querySelector('#expression');
   const feedback = document.querySelector('#feedback');
   const announcement = document.querySelector('#announcement');
@@ -186,7 +233,7 @@ if (typeof document !== 'undefined') {
   function render(cursor) {
     input.value = calculator.expression;
     if (cursor !== undefined) input.setSelectionRange(cursor, cursor);
-    feedback.textContent = calculator.error;
+    feedback.textContent = calculator.error || historyStorage.error;
     input.setAttribute('aria-invalid', String(Boolean(calculator.error)));
     // Answers are added to history only by Enter/equals, never while editing.
     const rows = calculator.history;
@@ -251,7 +298,7 @@ if (typeof document !== 'undefined') {
     const tool = {
       name: 'calculate_expression',
       title: 'Calculate expression',
-      description: 'Evaluate arithmetic and add the expression and answer to this calculator display and session history.',
+      description: 'Evaluate arithmetic and add the expression and answer to the display and locally saved calculation history.',
       inputSchema: {
         type: 'object',
         properties: { expression: { type: 'string', minLength: 1, maxLength: MAX_LENGTH } },

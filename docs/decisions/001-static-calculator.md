@@ -2,6 +2,8 @@
 
 Date: 2026-09-17
 
+History persistence was subsequently added by [ADR 002](002-local-history.md); the original page-memory-only decision below is superseded for history.
+
 ## Context and decision
 
 The app needs a roomy dark display, everyday arithmetic, parentheses, and a compact keypad. Use three static files, a dedicated arithmetic parser, native browser controls, JavaScript Numbers, and Node's built-in tests. Keep history in page memory.

@@ -36,7 +36,15 @@ rsvg-convert --width 180 --height 180 --output dist/icons/apple-touch-icon.png d
 - After Enter, a number or opening parenthesis starts fresh; an operator continues from the answer. Repeated Enter does nothing.
 - `±` changes the sign of the **whole expression**. Backspace deletes the selection or preceding character. `C` / Escape clears only the current expression.
 - Keyboard: digits, `.`, parentheses, `+ - * /`, Enter / `=`, Backspace, Escape. Click the expression to select or edit within it.
-- The last 100 calculations stay in page memory. Refreshing clears them; no calculations leave the browser.
+- The last 100 completed calculations are saved automatically on this browser/device and restored when you reload or reopen the calculator. Only Enter / `=` saves; unfinished input is not saved. Reopening starts with an empty input, so old digits cannot enter the next calculation. `C` still clears only the current entry.
+
+## Saved history
+
+History uses the browser's [localStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage) under `top-view-calculator.history.v1`. The app does not upload calculations or sync them between devices, browsers, or the earlier private Sites address. Safari tabs and an installed home-screen app may use separate storage; do not rely on their histories being shared.
+
+Clearing this site's browser data removes saved history. Private browsing does not provide lasting storage. Other apps served from the same `https://joshpled.github.io` origin can access that origin's localStorage, so it is not an encrypted or isolated vault.
+
+If loading or saving fails, a message appears below the input and the calculator continues working in memory. A later successful calculation retries saving the current history. Invalid stored rows are skipped; unreadable data stays untouched until a new calculation successfully saves. Multiple open calculator tabs do not merge their histories: the most recent successful save replaces the stored list. Use one instance for a consistent history.
 
 ## Precision
 
@@ -44,4 +52,4 @@ Answers display up to 12 significant digits. Operator continuation shows that sa
 
 Division by zero, malformed expressions, and non-finite results show a correctable error on Enter. Incomplete input stays quiet while typing.
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) and [the implementation decision](docs/decisions/001-static-calculator.md).
+See [ARCHITECTURE.md](ARCHITECTURE.md), [the implementation decision](docs/decisions/001-static-calculator.md), and [the saved-history decision](docs/decisions/002-local-history.md).
