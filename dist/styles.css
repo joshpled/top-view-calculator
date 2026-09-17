@@ -95,6 +95,22 @@ button:focus-visible,input:focus-visible,.display:focus-visible{
   gap:5px;
   font-variant-numeric:tabular-nums
 }
+.history-item{
+  appearance:none;
+  width:100%;
+  min-width:0;
+  min-height:44px;
+  padding:4px 0;
+  border:0;
+  border-radius:5px;
+  background:transparent;
+  text-align:left;
+  cursor:pointer
+}
+.history-item:active{
+  color:var(--accent);
+  background:#a8dae014
+}
 .history-expression{
   color:#858886;
   font-size:1.0625rem;
@@ -142,6 +158,11 @@ button:focus-visible,input:focus-visible,.display:focus-visible{
 .expression:focus-visible{
   box-shadow:0 2px 0 #a8dae042
 }
+.expression.recalled{
+  background:#a8dae018;
+  outline:2px solid var(--accent);
+  outline-offset:4px
+}
 .feedback{
   color:#edb5a6;
   min-height:1.15rem;
@@ -149,6 +170,9 @@ button:focus-visible,input:focus-visible,.display:focus-visible{
   line-height:1.4;
   margin:9px 0 0;
   overflow-wrap:anywhere
+}
+.feedback.recall-feedback{
+  color:var(--accent)
 }
 .keypad{
   display:grid;
@@ -231,6 +255,10 @@ button:focus-visible,input:focus-visible,.display:focus-visible{
   border:0
 }
 @media(hover:hover){
+  .history-item:hover{
+    color:var(--accent);
+    background:#a8dae00c
+  }
   .key:hover{
     filter:brightness(1.12)
   }

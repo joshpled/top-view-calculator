@@ -10,6 +10,7 @@ The browser owns all calculator state. Hosting serves static HTML, CSS, JavaScri
 | `dist/icons/` | Shared C artwork as SVG favicon and opaque 180 × 180 PNG for iPhone home-screen shortcuts |
 | `tests/calculator.test.js` | Precedence, shorthand multiplication, errors, and input transitions |
 | `tests/history.test.js` | Restore/save behavior, input isolation, storage limits, malformed data, and failure recovery |
+| `tests/recall.test.js` | Expression/result recall, precision, replacing input, and saving only on equals |
 | `.openai/hosting.json` | Earlier private Sites identity; independent of current GitHub Pages hosting |
 
 ## Arithmetic flow
@@ -21,6 +22,12 @@ The tokenizer accepts decimal/scientific numbers and arithmetic symbols. A recur
 Continuation shows the same 12-significant-digit answer the user saw. `carriedNumber` binds its numeric token (start, length, raw value) to the original precision. The parser substitutes that raw value only for the untouched token. Edits within the number invalidate the binding; edits before it move the binding. This prevents ugly floating-point digits from entering the visible expression without introducing cumulative rounding. Native replacement of the input clears the binding.
 
 The DOM adapter preserves text selection for keypad editing. Physical arithmetic keys and keypad taps use the same actions even when the input has focus. Native replacement input has an already-empty value after Enter, so it cannot append to the preceding calculation. History uses `textContent`, not HTML interpolation. Limits: 500 input characters and 100 completed entries.
+
+## History recall
+
+Each history expression and answer is a native button with a descriptive accessible name and a minimum 44px target height. Click/tap or keyboard Enter/Space calls `Calculator.recall(index, part)`. Expression recall uses `edit()` to replace active input with recorded text and discard any carried-number binding. Answer recall uses `useAnswer()` to retain the saved numeric precision. Both clear completion/error/previous-answer state without evaluating, mutating history, or writing storage. No history format migration is needed.
+
+Recall focuses the input with its cursor at the end, scrolls the display to it, and shows a static cyan highlight and a short notice for 1.4 seconds. Ordinary input/actions cancel that feedback, and a repeated recall restarts its timer. Clearing the timer updates feedback only, so it cannot unexpectedly scroll the display while the user browses history. Arithmetic/storage errors take priority over recall notices; a separate live announcement still identifies the recall. There is no animated motion, including for reduced-motion users. History buttons do not cancel pointer events, preserving normal swipe scrolling. See [ADR 003](docs/decisions/003-history-recall.md).
 
 When a browser offers `document.modelContext`, the optional `calculate_expression` tool validates input before using the same visible Enter flow, including saving history locally. Unsupported browsers keep the normal interface. This tool has no network access.
 

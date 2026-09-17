@@ -32,6 +32,7 @@ rsvg-convert --width 180 --height 180 --output dist/icons/apple-touch-icon.png d
 
 - Enter numbers, decimals, `+`, `−`, `×`, `÷`, and nested parentheses. Answers appear only after Enter / `=`. Enter saves the calculation once in history and immediately clears the input for the next calculation.
 - Scroll or swipe anywhere in the upper display to review earlier calculations. The keypad stays in place. New input returns the display to the current calculation.
+- Tap a past calculation to replace the input with its expression, or tap a result to reuse that number at full precision. The input comes into view with a brief cyan highlight and “Calculation loaded” / “Result loaded” feedback; the cursor lands at the end. Keyboard users can Tab to an entry and activate it with Enter or Space. Recall does not calculate or save until you press Enter / `=` again.
 - `2(3+4)`, `(2+3)(4+5)`, and `(2+3)4` imply multiplication. Multiplication, division, and implied multiplication run left to right: `6÷2(1+2)` is `9`. Write `6÷(2(1+2))` when the whole product belongs in the denominator.
 - After Enter, a number or opening parenthesis starts fresh; an operator continues from the answer. Repeated Enter does nothing.
 - `±` changes the sign of the **whole expression**. Backspace deletes the selection or preceding character. `C` / Escape clears only the current expression.
@@ -49,6 +50,8 @@ If loading or saving fails, a message appears below the input and the calculator
 ## Precision
 
 Answers display up to 12 significant digits. Operator continuation shows that same tidy number while retaining its underlying JavaScript Number; editing its digits switches to the newly typed value. Very large or small results use scientific notation. This is everyday floating-point arithmetic, not arbitrary-precision math; very large integers, cancellation, and underflow have standard floating-point limits.
+
+Recalling a result retains its saved raw precision until you edit its digits. Recalling a calculation copies its recorded expression exactly, without hidden precision from the original session. For example, a recorded continuation may display `0.333333333333×3` with an original answer of `1`. Recalling the calculation evaluates those displayed digits; recalling the result loads the saved `1`.
 
 Division by zero, malformed expressions, and non-finite results show a correctable error on Enter. Incomplete input stays quiet while typing.
 
