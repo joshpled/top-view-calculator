@@ -1,7 +1,7 @@
 const MAX_LENGTH = 500;
 
 /** Recursive descent keeps arithmetic separate from JavaScript execution. */
-export function evaluateExpression(source) {
+export function evaluateExpression(source, carriedNumber = null) {
   const text = source.replaceAll('×', '*').replaceAll('÷', '/').replaceAll('−', '-');
   if (text.length > MAX_LENGTH) throw new Error('Keep the expression under 500 characters.');
   if (!text.trim()) throw new Error('Enter a calculation.');
@@ -11,7 +11,8 @@ export function evaluateExpression(source) {
     if (/\s/.test(text[offset])) { offset++; continue; }
     const number = text.slice(offset).match(/^(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?/);
     if (number) {
-      const value = Number(number[0]);
+      const value = carriedNumber?.start === offset && carriedNumber.length === number[0].length
+        ? carriedNumber.value : Number(number[0]);
       if (!Number.isFinite(value)) throw new Error('That number is too large.');
       tokens.push({ type: 'number', value });
       offset += number[0].length;
@@ -81,28 +82,52 @@ export class Calculator {
   completed = false;
   error = '';
   history = [];
+  carriedNumber = null;
 
   edit(value) {
     this.expression = value.slice(0, MAX_LENGTH);
     this.completed = false;
     this.error = '';
+    this.carriedNumber = null;
+  }
+
+  currentValue() { return evaluateExpression(this.expression, this.carriedNumber); }
+
+  // Show the same 12-digit answer the user saw, without losing its numeric precision.
+  useAnswer(value = this.answer) {
+    const text = Number(value.toPrecision(12)).toString();
+    this.edit(text);
+    const start = text.startsWith('-') ? 1 : 0;
+    this.carriedNumber = { start, length: text.length - start, value: Math.abs(value) };
+  }
+
+  replace(value, start, end) {
+    const next = this.expression.slice(0, start) + value + this.expression.slice(end);
+    if (next.length > MAX_LENGTH) { this.error = 'Keep the expression under 500 characters.'; return start; }
+    let carried = this.carriedNumber && { ...this.carriedNumber };
+    if (carried) {
+      if (end <= carried.start) carried.start += value.length - (end - start);
+      else if (start < carried.start + carried.length) carried = null;
+      const number = carried && next.slice(carried.start).match(/^(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?/);
+      if (carried && number?.[0].length !== carried.length) carried = null;
+    }
+    this.edit(next);
+    this.carriedNumber = carried;
+    return start + value.length;
   }
 
   insert(value, start = this.expression.length, end = start) {
     if (this.completed) {
-      this.expression = /^[+−×÷*/-]/.test(value) ? String(this.answer) : '';
+      if (/^[+−×÷*/-]$/.test(value)) this.useAnswer();
+      else this.edit('');
       start = end = this.expression.length;
     }
-    const next = this.expression.slice(0, start) + value + this.expression.slice(end);
-    if (next.length > MAX_LENGTH) { this.error = 'Keep the expression under 500 characters.'; return start; }
-    this.edit(next);
-    return start + value.length;
+    return this.replace(value, start, end);
   }
 
   backspace(start = this.expression.length, end = start) {
     const from = start === end ? Math.max(0, start - 1) : start;
-    this.edit(this.expression.slice(0, from) + this.expression.slice(end));
-    return from;
+    return this.replace('', from, end);
   }
 
   paste(value, start = this.expression.length, end = start) {
@@ -114,7 +139,7 @@ export class Calculator {
   clear() { this.edit(''); this.answer = null; }
 
   toggleSign() {
-    if (this.completed) { this.edit(String(-this.answer)); return; }
+    if (this.completed) { this.useAnswer(-this.answer); return; }
     if (!this.expression) { this.edit('−'); return; }
     if (this.expression === '−' || this.expression === '-') { this.edit(''); return; }
     if (this.expression.startsWith('−(') && this.expression.endsWith(')')) {
@@ -123,20 +148,28 @@ export class Calculator {
       const inside = this.expression.slice(2, -1);
       let whole = true;
       for (const char of inside) { if (char === '(') depth++; if (char === ')' && --depth < 0) whole = false; }
-      if (whole) { this.edit(inside); return; }
+      if (whole) {
+        const carried = this.carriedNumber && { ...this.carriedNumber, start: this.carriedNumber.start - 2 };
+        this.edit(inside); this.carriedNumber = carried; return;
+      }
     }
-    if (this.expression.length + 3 <= MAX_LENGTH) this.edit(`−(${this.expression})`);
+    if (this.expression.length + 3 <= MAX_LENGTH) {
+      const carried = this.carriedNumber && { ...this.carriedNumber, start: this.carriedNumber.start + 2 };
+      this.edit(`−(${this.expression})`); this.carriedNumber = carried;
+    }
     else this.error = 'Keep the expression under 500 characters.';
   }
 
   equals() {
     if (!this.expression.trim() || this.completed) return;
     try {
-      this.answer = evaluateExpression(this.expression);
+      this.answer = this.currentValue();
       this.completed = true;
       this.error = '';
       this.history.push({ expression: this.expression, answer: this.answer });
       if (this.history.length > 100) this.history.shift();
+      this.expression = '';
+      this.carriedNumber = null;
     } catch (error) { this.error = error.message; }
   }
 }
@@ -148,6 +181,7 @@ if (typeof document !== 'undefined') {
   const feedback = document.querySelector('#feedback');
   const announcement = document.querySelector('#announcement');
   const history = document.querySelector('#history');
+  const display = document.querySelector('#display');
   let historySignature = '';
 
   function render(cursor) {
@@ -155,14 +189,13 @@ if (typeof document !== 'undefined') {
     if (cursor !== undefined) input.setSelectionRange(cursor, cursor);
     feedback.textContent = calculator.error;
     input.setAttribute('aria-invalid', String(Boolean(calculator.error)));
-    let value = calculator.completed ? calculator.answer : null;
-    if (!calculator.completed && calculator.expression.trim()) {
-      try { value = evaluateExpression(calculator.expression); } catch { /* In-progress input is quiet until Enter. */ }
+    let value = null;
+    if (calculator.expression.trim()) {
+      try { value = calculator.currentValue(); } catch { /* In-progress input is quiet until Enter. */ }
     }
-    result.textContent = value === null ? (calculator.expression ? '—' : '0') : formatResult(value);
-    result.classList.toggle('is-preview', !calculator.completed);
-    // Keep the latest completed calculation in the current display until editing resumes.
-    const rows = calculator.completed ? calculator.history.slice(0, -1) : calculator.history;
+    result.textContent = value === null ? (calculator.expression ? '—' : '') : formatResult(value);
+    result.classList.add('is-preview');
+    const rows = calculator.history;
     const signature = JSON.stringify(rows);
     if (signature !== historySignature) {
       historySignature = signature;
@@ -172,8 +205,8 @@ if (typeof document !== 'undefined') {
         const answer = document.createElement('div'); answer.className = 'history-answer'; answer.textContent = formatResult(entry.answer);
         row.append(expression, answer); return row;
       }));
-      history.scrollTop = history.scrollHeight;
     }
+    display.scrollTop = display.scrollHeight;
   }
 
   function action(name, value) {
@@ -196,7 +229,7 @@ if (typeof document !== 'undefined') {
   });
   input.addEventListener('input', () => { const cursor = input.selectionStart; calculator.edit(input.value); announcement.textContent = ''; render(cursor); });
   input.addEventListener('beforeinput', event => {
-    if (calculator.completed && event.inputType === 'insertText' && event.data) {
+    if (event.cancelable && event.inputType === 'insertText' && event.data) {
       event.preventDefault(); action(undefined, event.data);
     }
   });
@@ -210,7 +243,7 @@ if (typeof document !== 'undefined') {
       if (event.target.tagName === 'BUTTON' && event.key === 'Enter') return;
       event.preventDefault(); action('equals'); return;
     }
-    if (event.target === input) return;
+    // Physical keys and keypad taps use the same fresh-entry and cursor logic.
     if (event.key === 'Backspace') { event.preventDefault(); action('backspace'); return; }
     if (/^[0-9.()+*/−÷×-]$/.test(event.key)) {
       event.preventDefault(); action(undefined, ({ '*': '×', '/': '÷', '-': '−' })[event.key] ?? event.key);
@@ -239,7 +272,7 @@ if (typeof document !== 'undefined') {
         evaluateExpression(value.expression); // Validate before changing visible state.
         calculator.edit(value.expression);
         action('equals');
-        return { expression: calculator.expression, result: calculator.answer, displayedResult: formatResult(calculator.answer) };
+        return { expression: value.expression, result: calculator.answer, displayedResult: formatResult(calculator.answer) };
       },
     };
     try {

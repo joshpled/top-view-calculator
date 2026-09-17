@@ -30,7 +30,7 @@ test('digits start fresh after Enter; repeated Enter does not duplicate history'
   assert.equal(calc.history.length, 1); calc.insert('7'); assert.equal(calc.expression, '7');
 });
 test('operators continue from the unrounded result', () => {
-  const calc = new Calculator(); calc.insert('1÷3'); calc.equals(); calc.insert('×3'); calc.equals();
+  const calc = new Calculator(); calc.insert('1÷3'); calc.equals(); calc.insert('×'); calc.insert('3'); calc.equals();
   assert.equal(calc.answer, 1); calc.insert('('); assert.equal(calc.expression, '(');
 });
 test('cursor insertion, range replacement, backspace, and clear', () => {
@@ -66,4 +66,29 @@ test('pasting a negative expression after Enter starts fresh', () => {
 test('toggling sign twice from empty leaves a valid new entry', () => {
   const calc = new Calculator(); calc.toggleSign(); calc.toggleSign(); calc.insert('2'); calc.equals();
   assert.equal(calc.answer, 2);
+});
+test('Enter archives immediately and empties the second-calculation input', () => {
+  const calc = new Calculator(); calc.insert('12+3'); calc.equals();
+  assert.equal(calc.expression, '');
+  assert.deepEqual(calc.history, [{ expression: '12+3', answer: 15 }]);
+  calc.insert('7'); calc.insert('+'); calc.insert('2'); calc.equals();
+  assert.equal(calc.answer, 9); assert.equal(calc.expression, '');
+  assert.equal(calc.history.length, 2); assert.equal(calc.history[1].expression, '7+2');
+});
+test('continuation never exposes floating-point digits and keeps numeric precision', () => {
+  const calc = new Calculator(); calc.insert('310.40+761.99'); calc.equals(); calc.insert('+');
+  assert.equal(calc.expression, '1072.39+');
+  calc.insert('1'); calc.equals(); assert.equal(formatResult(calc.answer), '1,073.39');
+  calc.edit('1÷3'); calc.equals(); calc.insert('×');
+  assert.equal(calc.expression, '0.333333333333×');
+  calc.insert('3'); calc.equals(); assert.equal(calc.answer, 1);
+});
+test('editing the carried answer uses the newly entered number', () => {
+  const calc = new Calculator(); calc.insert('1÷3'); calc.equals(); calc.insert('×');
+  calc.insert('2', 0, 14); calc.insert('3'); calc.equals(); assert.equal(calc.answer, 6);
+});
+test('fresh native edits and clear cannot restore a previous expression', () => {
+  const calc = new Calculator(); calc.insert('12+3'); calc.equals();
+  calc.edit('7'); calc.equals(); assert.equal(calc.answer, 7);
+  calc.clear(); calc.insert('4'); assert.equal(calc.expression, '4');
 });

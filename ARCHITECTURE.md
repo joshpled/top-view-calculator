@@ -14,9 +14,11 @@ The browser owns all calculator state. Hosting serves three static files; there 
 
 The tokenizer accepts decimal/scientific numbers and arithmetic symbols. A recursive descent parser reads primary values (including unary signs and parentheses), then multiplication/division, then addition/subtraction. It never runs input as JavaScript. Implied multiplication shares multiplication/division precedence and left-to-right evaluation.
 
-`Calculator` separates editing, completion, and errors. Enter saves the expression and raw numeric answer. The UI keeps the latest completed calculation in the current area until editing resumes, then moves it into the scrollable history. Only display formatting rounds to 12 significant digits; continuation uses the raw answer.
+`Calculator` separates editing, completion, and errors. Enter saves the expression and raw numeric answer once, then empties the input immediately. Completed rows remain consistently visible in history; they are never removed and reinserted when editing starts. The entire `#display` scrolls, while the keypad stays outside it. New input scrolls to the bottom.
 
-The DOM adapter preserves text selection for keypad editing. Native input handles direct edits; keypad and unfocused keyboard use the same model actions. History uses `textContent`, not HTML interpolation. Limits: 500 input characters and 100 session entries.
+Continuation shows the same 12-significant-digit answer the user saw. `carriedNumber` binds its numeric token (start, length, raw value) to the original precision. The parser substitutes that raw value only for the untouched token. Edits within the number invalidate the binding; edits before it move the binding. This prevents ugly floating-point digits from entering the visible expression without introducing cumulative rounding. Native replacement of the input clears the binding.
+
+The DOM adapter preserves text selection for keypad editing. Physical arithmetic keys and keypad taps use the same actions even when the input has focus. Native replacement input has an already-empty value after Enter, so it cannot append to the preceding calculation. History uses `textContent`, not HTML interpolation. Limits: 500 input characters and 100 session entries.
 
 When a browser offers `document.modelContext`, the optional `calculate_expression` tool validates input before using the same visible Enter flow. Unsupported browsers keep the normal interface. This tool has no network or storage access.
 

@@ -16,4 +16,5 @@ Follow the feature branch/PR workflow. Do not merge without explicit user approv
 
 ## Decisions log
 
+- 2026-09-17 — Enter immediately archives and clears input; the whole display scrolls — prevents old digits returning in a second entry — carried-number bindings keep display rounding separate from numeric precision and are invalidated when edited.
 - 2026-09-17 — Static files, arithmetic parser, page-memory history, display-only rounding — fits the lightweight approved scope — floating-point limitations and implicit multiplication precedence are documented; see docs/decisions/001-static-calculator.md.

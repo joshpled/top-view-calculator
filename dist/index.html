@@ -7,13 +7,13 @@
   <meta name="description" content="A simple calculator with a spacious display, parentheses, and everyday arithmetic.">
   <title>Calculator</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23232323'/%3E%3Cpath d='M8 11h16M8 21h16' stroke='%238fd3db' stroke-width='4'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="./styles.css">
-  <script type="module" src="./calculator.js"></script>
+  <link rel="stylesheet" href="./styles.css?v=2">
+  <script type="module" src="./calculator.js?v=2"></script>
 </head>
 <body>
   <main class="calculator" aria-label="Calculator">
     <header class="topbar"><h1>Calculator</h1><span aria-hidden="true">( + − × ÷ )</span></header>
-    <section class="display" aria-label="Calculation display">
+    <section id="display" class="display" aria-label="Calculation display" tabindex="0">
       <div id="history" class="history" role="log" aria-label="Previous calculations" aria-live="off"></div>
       <div class="current">
         <label class="sr-only" for="expression">Expression</label>
