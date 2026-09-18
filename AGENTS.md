@@ -18,6 +18,8 @@ The repository is now public. `main` had no branch protection configured when ch
 
 ## Decisions log
 
+- 2026-09-18 — Answer-continuation PR #7 squash-merged as 99ec0a2 and verified on GitHub Pages v7 — approved `answer` labels after equals with original values saved in history — 84 tests and live keypad/keyboard/reload/recall checks passed, deployed JS matches the merge, and feature branch deleted locally/remotely; physical iPhone verification remains separate.
+
 - 2026-09-18 — Show a bound `answer` label when an operator immediately follows equals — requested clear last-result continuation — preserve raw precision, resolve to parenthesized numeric history, and keep fresh-entry/reload behavior; see docs/decisions/004-answer-continuation.md.
 
 - 2026-09-18 — History-recall PR #6 squash-merged as 897bc2a and verified on GitHub Pages v6 — approved tapping expressions/results with a 200ms cyan source flash before input feedback — 66 tests and live browser checks passed, deployed JS/CSS match the merge, and feature branch deleted locally/remotely; physical iPhone verification remains separate.
