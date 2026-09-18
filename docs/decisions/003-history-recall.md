@@ -4,7 +4,7 @@ Date: 2026-09-17
 
 ## Context and decision
 
-The user wants tapping a saved calculation or result to fill the input with visual feedback. Use separate native buttons for the expression and its answer. Each replaces the current input, brings it into view, and places the cursor at the end. A static cyan highlight and a short notice acknowledge the action for 1.4 seconds. Recall remains an edit: equals is still required to evaluate and save.
+The user wants tapping a saved calculation or result to fill the input with visual feedback. Use separate native buttons for the expression and its answer. Each replaces the current input, brings it into view, and places the cursor at the end. The clicked expression or result flashes cyan for 200ms before scrolling, so the user can identify the source text. The input then highlights cyan with a short notice for 1.4 seconds. Editing or another recall cancels pending feedback, preventing an old timer from scrolling or highlighting the wrong entry. Recall remains an edit: equals is still required to evaluate and save.
 
 ## Why and tradeoffs
 

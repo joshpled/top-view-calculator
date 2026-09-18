@@ -111,6 +111,10 @@ button:focus-visible,input:focus-visible,.display:focus-visible{
   color:var(--accent);
   background:#a8dae014
 }
+.history .history-item.recall-source{
+  color:var(--accent);
+  background:#a8dae024
+}
 .history-expression{
   color:#858886;
   font-size:1.0625rem;
