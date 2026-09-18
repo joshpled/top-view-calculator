@@ -18,6 +18,8 @@ The repository is now public. `main` had no branch protection configured when ch
 
 ## Decisions log
 
+- 2026-09-18 — Show a bound `answer` label when an operator immediately follows equals — requested clear last-result continuation — preserve raw precision, resolve to parenthesized numeric history, and keep fresh-entry/reload behavior; see docs/decisions/004-answer-continuation.md.
+
 - 2026-09-17 — Tap a history calculation or result to replace active input with brief cyan feedback — requested reuse without retyping — the tapped source flashes cyan before revealing the input; expression recall copies recorded text, result recall retains raw precision, and only equals adds/saves another entry; see docs/decisions/003-history-recall.md.
 
 - 2026-09-17 — Persist the latest 100 completed calculations in localStorage — requested history across reloads — restore history only, keep input empty, catch storage failures, and preserve raw answers; see docs/decisions/002-local-history.md. Concurrent instances use the latest successful save.

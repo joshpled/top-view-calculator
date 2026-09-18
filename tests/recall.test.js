@@ -64,15 +64,15 @@ test('recalled result handles zero, negative values, and scientific notation', (
   }
 });
 
-test('expression recall loads the recorded text instead of resurrecting a hidden carried value', () => {
+test('expression recall loads resolved continuation text without resurrecting a hidden carried value', () => {
   const calc = completed('1÷3');
   calc.insert('×'); calc.insert('3'); calc.equals();
   calc.recall(0, 'answer');
   calc.recall(1, 'expression');
-  assert.equal(calc.expression, '0.333333333333×3');
+  assert.equal(calc.expression, '(0.3333333333333333) × 3');
   assert.equal(calc.carriedNumber, null);
   calc.equals();
-  assert.equal(calc.answer, 0.333333333333 * 3);
+  assert.equal(calc.answer, 1);
   assert.equal(calc.history[1].answer, 1);
 });
 
