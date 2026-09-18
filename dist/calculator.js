@@ -136,7 +136,17 @@ export class Calculator {
     this.carriedNumber = null;
   }
 
-  currentValue() { return evaluateExpression(this.expression, this.carriedNumber); }
+  resolvedExpression() {
+    const carried = this.carriedNumber;
+    if (carried?.label !== 'answer') return this.expression;
+    // Parentheses preserve a signed value and implicit multiplication when history is recalled.
+    return this.expression.slice(0, carried.start) + `(${carried.value})` +
+      this.expression.slice(carried.start + carried.length);
+  }
+
+  currentValue() {
+    return evaluateExpression(this.resolvedExpression(), this.carriedNumber?.label ? null : this.carriedNumber);
+  }
 
   // Show the same 12-digit answer the user saw, without losing its numeric precision.
   useAnswer(value = this.answer) {
@@ -147,14 +157,21 @@ export class Calculator {
   }
 
   replace(value, start, end) {
+    const label = this.carriedNumber?.label && this.carriedNumber;
+    if (label && start < label.start + label.length && end > label.start) {
+      // Treat the generated word as one token when deleting or replacing its letters.
+      start = Math.min(start, label.start);
+      end = Math.max(end, label.start + label.length);
+    }
     const next = this.expression.slice(0, start) + value + this.expression.slice(end);
     if (next.length > MAX_LENGTH) { this.error = 'Keep the expression under 500 characters.'; return start; }
     let carried = this.carriedNumber && { ...this.carriedNumber };
     if (carried) {
       if (end <= carried.start) carried.start += value.length - (end - start);
       else if (start < carried.start + carried.length) carried = null;
-      const number = carried && next.slice(carried.start).match(/^(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?/);
-      if (carried && number?.[0].length !== carried.length) carried = null;
+      const token = carried && next.slice(carried.start).match(carried.label
+        ? /^answer(?![\w.])/ : /^(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?/);
+      if (carried && token?.[0].length !== carried.length) carried = null;
     }
     this.edit(next);
     this.carriedNumber = carried;
@@ -163,8 +180,14 @@ export class Calculator {
 
   insert(value, start = this.expression.length, end = start) {
     if (this.completed) {
-      if (/^[+−×÷*/-]$/.test(value)) this.useAnswer();
-      else this.edit('');
+      if (/^[+−×÷*/-]$/.test(value)) {
+        const previous = this.answer;
+        const operator = ({ '*': '×', '/': '÷', '-': '−' })[value] ?? value;
+        this.edit(`answer ${operator} `);
+        this.carriedNumber = { start: 0, length: 6, value: previous, label: 'answer' };
+        return this.expression.length;
+      }
+      this.edit('');
       start = end = this.expression.length;
     }
     return this.replace(value, start, end);
@@ -220,7 +243,7 @@ export class Calculator {
       this.answer = this.currentValue();
       this.completed = true;
       this.error = '';
-      this.history.push({ expression: this.expression, answer: this.answer });
+      this.history.push({ expression: this.resolvedExpression(), answer: this.answer });
       if (this.history.length > MAX_HISTORY) this.history.shift();
       this.expression = '';
       this.carriedNumber = null;

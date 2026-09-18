@@ -53,13 +53,13 @@ test('keeps the latest 100 completed calculations in memory and storage', () => 
   assert.equal(JSON.parse(disk.values.get(HISTORY_KEY)).entries.length, 100);
 });
 
-test('restores raw answers without re-evaluating rounded continuation expressions', () => {
+test('restores raw answers and resolved full-precision continuation expressions', () => {
   const disk = storage();
   const calc = new Calculator(disk.store());
   calc.insert('1÷3'); calc.equals(); calc.insert('×'); calc.insert('3'); calc.equals();
   const reopened = new Calculator(disk.store());
   assert.deepEqual(reopened.history, [
-    { expression: '1÷3', answer: 1 / 3 }, { expression: '0.333333333333×3', answer: 1 },
+    { expression: '1÷3', answer: 1 / 3 }, { expression: '(0.3333333333333333) × 3', answer: 1 },
   ]);
 });
 
