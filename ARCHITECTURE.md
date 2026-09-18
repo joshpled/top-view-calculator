@@ -11,6 +11,7 @@ The browser owns all calculator state. Hosting serves static HTML, CSS, JavaScri
 | `tests/calculator.test.js` | Precedence, shorthand multiplication, errors, and input transitions |
 | `tests/history.test.js` | Restore/save behavior, input isolation, storage limits, malformed data, and failure recovery |
 | `tests/recall.test.js` | Expression/result recall, precision, replacing input, and saving only on equals |
+| `tests/answer.test.js` | Answer-label continuation, token edits, signed precision, history resolution, and limits |
 | `.openai/hosting.json` | Earlier private Sites identity; independent of current GitHub Pages hosting |
 
 ## Arithmetic flow
@@ -19,7 +20,9 @@ The tokenizer accepts decimal/scientific numbers and arithmetic symbols. A recur
 
 `Calculator` separates editing, completion, and errors. Typing only displays the expression; there is no live answer preview or render-time evaluation. Enter evaluates and saves the expression and raw numeric answer once, then empties the input immediately. Completed rows remain consistently visible in history; they are never removed and reinserted when editing starts. The entire `#display` scrolls, while the keypad stays outside it. New input scrolls to the bottom.
 
-Continuation shows the same 12-significant-digit answer the user saw. `carriedNumber` binds its numeric token (start, length, raw value) to the original precision. The parser substitutes that raw value only for the untouched token. Edits within the number invalidate the binding; edits before it move the binding. This prevents ugly floating-point digits from entering the visible expression without introducing cumulative rounding. Native replacement of the input clears the binding.
+Immediately after completion, a single operator creates `answer <operator> ` and a `carriedNumber` binding with `label: 'answer'`, its span, and the signed raw result. `resolvedExpression()` replaces only that bound span with a parenthesized full-precision numeric string before arithmetic and history saving. The parser itself stays numeric; arbitrary pasted `answer` text is not interpreted as a variable. Parentheses preserve negative values and implicit multiplication, and the existing 500-character parser limit also bounds the resolved history entry.
+
+Result recall and sign-toggle-from-completion retain the existing numeric form of `carriedNumber` (start, length, absolute raw value). The parser substitutes that raw value for the untouched numeric token. Edits within its digits invalidate this binding; edits before either kind of token move its span. For the generated word `answer`, edits intersecting its letters replace the whole token. Sign toggling moves either binding along with the surrounding parentheses. Native replacement of the entire input clears the binding. See [ADR 004](docs/decisions/004-answer-continuation.md).
 
 The DOM adapter preserves text selection for keypad editing. Physical arithmetic keys and keypad taps use the same actions even when the input has focus. Native replacement input has an already-empty value after Enter, so it cannot append to the preceding calculation. History uses `textContent`, not HTML interpolation. Limits: 500 input characters and 100 completed entries.
 
@@ -35,7 +38,7 @@ When a browser offers `document.modelContext`, the optional `calculate_expressio
 
 `HistoryStorage` receives a getter for the browser's localStorage. Both the getter and its read/write calls can throw; all are caught inside the adapter so failures cannot become arithmetic errors. `Calculator` accepts this optional adapter and loads history once in its constructor. Its default remains an in-memory model for arithmetic tests.
 
-Successful Enter updates history, clears active input, and then saves `{ version: 1, entries: [{ expression, answer }] }` under `top-view-calculator.history.v1`. Empty/repeated Enter, typing, arithmetic errors, and `C` do not write. Restoring does not set `expression`, `answer`, `completed`, or `carriedNumber`; the next calculation starts fresh. Stored raw answers are not recomputed from rounded continuation text.
+Successful Enter updates history, clears active input, and then saves `{ version: 1, entries: [{ expression, answer }] }` under `top-view-calculator.history.v1`. Bound `answer` labels are resolved to numeric text before archiving, so stored expressions remain self-contained under the existing schema. Empty/repeated Enter, typing, arithmetic errors, and `C` do not write. Restoring does not set `expression`, `answer`, `completed`, or `carriedNumber`; the next calculation starts fresh. Stored raw answers are not recomputed from historical expression text.
 
 Loading rejects data over 400,000 characters (enough for 100 maximum-length expressions even with JSON escaping) and unsupported structures/versions. It skips entries with invalid expression types, lengths, or characters and non-finite numeric answers, strips unknown fields, and retains the latest 100 valid rows. It does not evaluate stored expression text. Existing data is not rewritten on startup. Load/save issues appear in the existing feedback area; arithmetic errors take priority, and only arithmetic errors mark the input invalid. A successful save clears the storage notice.
 

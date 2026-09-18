@@ -77,15 +77,15 @@ test('Enter archives immediately and empties the second-calculation input', () =
 });
 test('continuation never exposes floating-point digits and keeps numeric precision', () => {
   const calc = new Calculator(); calc.insert('310.40+761.99'); calc.equals(); calc.insert('+');
-  assert.equal(calc.expression, '1072.39+');
+  assert.equal(calc.expression, 'answer + ');
   calc.insert('1'); calc.equals(); assert.equal(formatResult(calc.answer), '1,073.39');
   calc.edit('1÷3'); calc.equals(); calc.insert('×');
-  assert.equal(calc.expression, '0.333333333333×');
+  assert.equal(calc.expression, 'answer × ');
   calc.insert('3'); calc.equals(); assert.equal(calc.answer, 1);
 });
 test('editing the carried answer uses the newly entered number', () => {
   const calc = new Calculator(); calc.insert('1÷3'); calc.equals(); calc.insert('×');
-  calc.insert('2', 0, 14); calc.insert('3'); calc.equals(); assert.equal(calc.answer, 6);
+  calc.insert('2', 0, 6); calc.insert('3'); calc.equals(); assert.equal(calc.answer, 6);
 });
 test('fresh native edits and clear cannot restore a previous expression', () => {
   const calc = new Calculator(); calc.insert('12+3'); calc.equals();
