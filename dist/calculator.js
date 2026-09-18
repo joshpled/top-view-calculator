@@ -183,6 +183,15 @@ export class Calculator {
 
   clear() { this.edit(''); this.answer = null; }
 
+  recall(index, part) {
+    const entry = this.history[index];
+    if (!Number.isInteger(index) || !entry || !['expression', 'answer'].includes(part)) return false;
+    this.answer = null;
+    if (part === 'answer') this.useAnswer(entry.answer);
+    else this.edit(entry.expression);
+    return true;
+  }
+
   toggleSign() {
     if (this.completed) { this.useAnswer(-this.answer); return; }
     if (!this.expression) { this.edit('−'); return; }
@@ -229,28 +238,75 @@ if (typeof document !== 'undefined') {
   const history = document.querySelector('#history');
   const display = document.querySelector('#display');
   let historySignature = '';
+  let recallNotice = '';
+  let recallTimer;
+  let sourceFlashTimer;
+  let recalledSource;
 
-  function render(cursor) {
+  function updateFeedback() {
+    const error = calculator.error || historyStorage.error;
+    feedback.textContent = error || recallNotice;
+    feedback.classList.toggle('recall-feedback', Boolean(recallNotice && !error));
+    input.setAttribute('aria-invalid', String(Boolean(calculator.error)));
+  }
+
+  function clearRecallFeedback() {
+    clearTimeout(recallTimer);
+    clearTimeout(sourceFlashTimer);
+    recalledSource?.classList.remove('recall-source');
+    recalledSource = null;
+    recallNotice = '';
+    input.classList.remove('recalled');
+  }
+
+  function recallHistory(index, part, source) {
+    if (!calculator.recall(index, part)) return;
+    clearRecallFeedback();
+    recallNotice = part === 'answer' ? 'Result loaded' : 'Calculation loaded';
+    render(calculator.expression.length, false);
+    input.focus({ preventScroll: true });
+    input.scrollLeft = input.scrollWidth;
+    recalledSource = source;
+    source.classList.add('recall-source');
+    // Errors retain priority in the visible feedback area; recall is still announced.
+    announcement.textContent = `${recallNotice} into the input.`;
+    // Keep the clicked text in view long enough to identify it before revealing the input.
+    sourceFlashTimer = setTimeout(() => {
+      source.classList.remove('recall-source');
+      recalledSource = null;
+      display.scrollTop = display.scrollHeight;
+      input.classList.add('recalled');
+      recallTimer = setTimeout(() => { clearRecallFeedback(); updateFeedback(); }, 1400);
+    }, 200);
+  }
+
+  function render(cursor, scrollToInput = true) {
     input.value = calculator.expression;
     if (cursor !== undefined) input.setSelectionRange(cursor, cursor);
-    feedback.textContent = calculator.error || historyStorage.error;
-    input.setAttribute('aria-invalid', String(Boolean(calculator.error)));
+    updateFeedback();
     // Answers are added to history only by Enter/equals, never while editing.
     const rows = calculator.history;
     const signature = JSON.stringify(rows);
     if (signature !== historySignature) {
       historySignature = signature;
-      history.replaceChildren(...rows.map(entry => {
+      history.replaceChildren(...rows.map((entry, index) => {
         const row = document.createElement('div'); row.className = 'history-row';
-        const expression = document.createElement('div'); expression.className = 'history-expression'; expression.textContent = entry.expression;
-        const answer = document.createElement('div'); answer.className = 'history-answer'; answer.textContent = formatResult(entry.answer);
+        const expression = document.createElement('button');
+        expression.type = 'button'; expression.className = 'history-item history-expression'; expression.textContent = entry.expression;
+        expression.setAttribute('aria-label', `Use calculation ${entry.expression}`);
+        expression.addEventListener('click', () => recallHistory(index, 'expression', expression));
+        const answer = document.createElement('button');
+        answer.type = 'button'; answer.className = 'history-item history-answer'; answer.textContent = formatResult(entry.answer);
+        answer.setAttribute('aria-label', `Use result ${formatResult(entry.answer)}`);
+        answer.addEventListener('click', () => recallHistory(index, 'answer', answer));
         row.append(expression, answer); return row;
       }));
     }
-    display.scrollTop = display.scrollHeight;
+    if (scrollToInput) display.scrollTop = display.scrollHeight;
   }
 
   function action(name, value) {
+    clearRecallFeedback();
     let cursor;
     const start = input.selectionStart ?? calculator.expression.length;
     const end = input.selectionEnd ?? start;
@@ -268,7 +324,7 @@ if (typeof document !== 'undefined') {
     button.addEventListener('pointerdown', event => event.preventDefault());
     button.addEventListener('click', () => action(button.dataset.action, button.dataset.value));
   });
-  input.addEventListener('input', () => { const cursor = input.selectionStart; calculator.edit(input.value); announcement.textContent = ''; render(cursor); });
+  input.addEventListener('input', () => { clearRecallFeedback(); const cursor = input.selectionStart; calculator.edit(input.value); announcement.textContent = ''; render(cursor); });
   input.addEventListener('beforeinput', event => {
     if (event.cancelable && event.inputType === 'insertText' && event.data) {
       event.preventDefault(); action(undefined, event.data);
