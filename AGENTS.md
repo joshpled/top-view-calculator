@@ -18,6 +18,8 @@ The repository is now public. `main` had no branch protection configured when ch
 
 ## Decisions log
 
+- 2026-09-18 — History-recall PR #6 squash-merged as 897bc2a and verified on GitHub Pages v6 — approved tapping expressions/results with a 200ms cyan source flash before input feedback — 66 tests and live browser checks passed, deployed JS/CSS match the merge, and feature branch deleted locally/remotely; physical iPhone verification remains separate.
+
 - 2026-09-17 — Tap a history calculation or result to replace active input with brief cyan feedback — requested reuse without retyping — the tapped source flashes cyan before revealing the input; expression recall copies recorded text, result recall retains raw precision, and only equals adds/saves another entry; see docs/decisions/003-history-recall.md.
 
 - 2026-09-17 — Saved-history PR #4 squash-merged as aebb67b after 58 tests and browser checks passed — approved persistence of completed calculations only — GitHub Pages v4 verified with reload/reopen checks and matching JavaScript; feature branch deleted locally and remotely; active input stays empty, and existing lost sessions cannot be recovered. Physical iPhone persistence remains device-unverified.
