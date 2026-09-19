@@ -26,6 +26,12 @@ Result recall and sign-toggle-from-completion retain the existing numeric form o
 
 The DOM adapter preserves text selection for keypad editing. Physical arithmetic keys and keypad taps use the same actions even when the input has focus. Native replacement input has an already-empty value after Enter, so it cannot append to the preceding calculation. History uses `textContent`, not HTML interpolation. Limits: 500 input characters and 100 completed entries.
 
+## Display layout
+
+The document is fixed to the small viewport height (`100svh`) with page overflow and overscroll disabled. Removing minimum calculator/display heights lets the layout fit short screens instead of extending the page. Only `#display` scrolls; its contents can grow independently of the keypad. A short landscape viewport uses side-by-side display and keypad columns to keep both usable, with safe-area padding around screen cutouts.
+
+The expression is a soft-wrapping textarea, not a single-line input. On render, the adapter measures its `scrollHeight` and grows the field to fit. A ResizeObserver remeasures on width changes and reveals the edited line on display-height changes without changing the value or selection; it ignores content-height changes to avoid a resize loop. Wraps are visual and do not alter arithmetic or saved history. A temporary hidden text mirror locates the caret when editing an earlier line, so only the enclosing display scrolls to reveal it. At the end of input, the display follows the bottom as before. Enter still calculates instead of inserting a newline. See [ADR 005](docs/decisions/005-stable-multiline-display.md).
+
 ## History recall
 
 Each history expression and answer is a native button with a descriptive accessible name and a minimum 44px target height. Click/tap or keyboard Enter/Space calls `Calculator.recall(index, part)`. Expression recall uses `edit()` to replace active input with recorded text and discard any carried-number binding. Answer recall uses `useAnswer()` to retain the saved numeric precision. Both clear completion/error/previous-answer state without evaluating, mutating history, or writing storage. No history format migration is needed.

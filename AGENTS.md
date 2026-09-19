@@ -18,6 +18,8 @@ The repository is now public. `main` had no branch protection configured when ch
 
 ## Decisions log
 
+- 2026-09-19 — Fix the page to the viewport and soft-wrap expressions in an auto-height textarea — approved stable layout with scrolling limited to the top display — preserve caret editing and history access; short landscape screens use two columns; see docs/decisions/005-stable-multiline-display.md.
+
 - 2026-09-18 — Show a bound `answer` label when an operator immediately follows equals — requested clear last-result continuation — preserve raw precision, resolve to parenthesized numeric history, and keep fresh-entry/reload behavior; see docs/decisions/004-answer-continuation.md.
 
 - 2026-09-17 — Tap a history calculation or result to replace active input with brief cyan feedback — requested reuse without retyping — the tapped source flashes cyan before revealing the input; expression recall copies recorded text, result recall retains raw precision, and only equals adds/saves another entry; see docs/decisions/003-history-recall.md.

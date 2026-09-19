@@ -8,8 +8,8 @@
   <title>Calculator</title>
   <link rel="icon" type="image/svg+xml" href="./icons/calculator.svg">
   <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./styles.css?v=6">
-  <script type="module" src="./calculator.js?v=7"></script>
+  <link rel="stylesheet" href="./styles.css?v=8">
+  <script type="module" src="./calculator.js?v=8"></script>
 </head>
 <body>
   <main class="calculator" aria-label="Calculator">
@@ -18,7 +18,7 @@
       <div id="history" class="history" role="log" aria-label="Previous calculations" aria-live="off"></div>
       <div class="current">
         <label class="sr-only" for="expression">Expression</label>
-        <input id="expression" class="expression" type="text" inputmode="none" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="0" maxlength="500" aria-describedby="feedback">
+        <textarea id="expression" class="expression" rows="1" wrap="soft" inputmode="none" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="0" maxlength="500" aria-describedby="feedback"></textarea>
         <p id="feedback" class="feedback" aria-live="polite"></p>
         <p id="announcement" class="sr-only" aria-live="polite"></p>
       </div>
