@@ -266,6 +266,40 @@ if (typeof document !== 'undefined') {
   let sourceFlashTimer;
   let recalledSource;
 
+  function resizeExpression() {
+    // Grow the field itself, so only the enclosing display needs to scroll.
+    input.style.height = '0px';
+    input.style.height = `${input.scrollHeight}px`;
+    input.scrollTop = 0;
+  }
+
+  function revealInput(cursor = input.selectionEnd) {
+    if (cursor === input.value.length) {
+      display.scrollTop = display.scrollHeight;
+      return;
+    }
+    // Locate an edited line without moving the keypad or adding a second scroller.
+    const mirror = document.createElement('div');
+    mirror.className = 'expression';
+    mirror.setAttribute('aria-hidden', 'true');
+    Object.assign(mirror.style, {
+      position: 'absolute', visibility: 'hidden', pointerEvents: 'none',
+      width: `${input.clientWidth}px`, top: '0', left: '0'
+    });
+    mirror.textContent = input.value.slice(0, cursor);
+    const caret = document.createElement('span');
+    caret.textContent = input.value.slice(cursor, cursor + 1) || '\u200b';
+    mirror.append(caret);
+    mirror.append(document.createTextNode(input.value.slice(cursor + 1)));
+    input.parentElement.append(mirror);
+    const top = input.getBoundingClientRect().top + caret.getBoundingClientRect().top - mirror.getBoundingClientRect().top;
+    const bottom = top + parseFloat(getComputedStyle(input).lineHeight);
+    const bounds = display.getBoundingClientRect();
+    mirror.remove();
+    if (top < bounds.top + 12) display.scrollTop += top - bounds.top - 12;
+    else if (bottom > bounds.bottom - 12) display.scrollTop += bottom - bounds.bottom + 12;
+  }
+
   function updateFeedback() {
     const error = calculator.error || historyStorage.error;
     feedback.textContent = error || recallNotice;
@@ -288,7 +322,6 @@ if (typeof document !== 'undefined') {
     recallNotice = part === 'answer' ? 'Result loaded' : 'Calculation loaded';
     render(calculator.expression.length, false);
     input.focus({ preventScroll: true });
-    input.scrollLeft = input.scrollWidth;
     recalledSource = source;
     source.classList.add('recall-source');
     // Errors retain priority in the visible feedback area; recall is still announced.
@@ -305,6 +338,7 @@ if (typeof document !== 'undefined') {
 
   function render(cursor, scrollToInput = true) {
     input.value = calculator.expression;
+    resizeExpression();
     if (cursor !== undefined) input.setSelectionRange(cursor, cursor);
     updateFeedback();
     // Answers are added to history only by Enter/equals, never while editing.
@@ -325,7 +359,7 @@ if (typeof document !== 'undefined') {
         row.append(expression, answer); return row;
       }));
     }
-    if (scrollToInput) display.scrollTop = display.scrollHeight;
+    if (scrollToInput) revealInput(cursor);
   }
 
   function action(name, value) {
@@ -370,6 +404,19 @@ if (typeof document !== 'undefined') {
     }
   });
   render(0);
+
+  // Rewrap/reveal on viewport changes without changing the expression or selection.
+  let inputWidth = input.clientWidth;
+  let displayHeight = display.clientHeight;
+  const layoutObserver = new ResizeObserver(() => {
+    if (input.clientWidth === inputWidth && display.clientHeight === displayHeight) return;
+    if (input.clientWidth !== inputWidth) resizeExpression();
+    inputWidth = input.clientWidth;
+    displayHeight = display.clientHeight;
+    revealInput();
+  });
+  layoutObserver.observe(input);
+  layoutObserver.observe(display);
 
   // Optional browser-native agent access, using the same calculation flow as Enter.
   if (document.modelContext?.registerTool) {
